@@ -5,7 +5,7 @@ on:
 jobs:
   molecule:
     name: Molecule
-    runs-on: macos-12
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         scenario:
