@@ -1,0 +1,16 @@
+- name: Longhorn Prepare
+  include_tasks: longhorn-prepare.yml
+
+#   kubectl:
+#     src: https://raw.githubusercontent.com/longhorn/longhorn/v1.1.0/deploy/longhorn.yaml
+#     state: present
+#     namespace: longhorn-system
+#     validate_certs: false
+#     kubeconfig: /etc/kubernetes/admin.conf
+#     force: true
+#     wait: yes
+#     timeout: 300
+#     recreate_pods: yes
+#     update_strategy: RollingUpdate
+#   when: "master[0] == inventory_hostname"
+

@@ -1,0 +1,16 @@
+- name: Install Longhorn dependencies
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - open-iscsi
+    - nfs-common
+    
+- name: Enable iscsi
+  become: true
+  service:
+    name: open-iscsi
+    state: started
+    enabled: true

@@ -1,0 +1,12 @@
+- name: deploy portainer
+  kubectl:
+    src: ttps://downloads.portainer.io/ce2-19/portainer-lb.yaml
+    state: present
+    namespace: portainer
+    validate_certs: false
+    kubeconfig: /etc/kubernetes/admin.conf
+    force: true
+    wait: yes
+    timeout: 300
+    recreate_pods: yes
+    update_strategy: RollingUpdate
