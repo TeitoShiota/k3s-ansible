@@ -1,6 +1,6 @@
 - name: deploy portainer
   kubectl:
-    src: ttps://downloads.portainer.io/ce2-19/portainer-lb.yaml
+    src: https://downloads.portainer.io/ce2-19/portainer-lb.yaml
     state: present
     namespace: portainer
     validate_certs: false

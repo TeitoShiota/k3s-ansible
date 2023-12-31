@@ -1,16 +1,67 @@
-- name: Install Longhorn dependencies
-  become: true
-  apt:
-    name: "{{ item }}"
-    state: present
-    update_cache: yes
-  with_items:
-    - open-iscsi
-    - nfs-common
-    
-- name: Enable iscsi
-  become: true
-  service:
-    name: open-iscsi
-    state: started
-    enabled: true
+- name: Format disks for storage before installing Longhorn
+  hosts: storage_servers
+  tags: longhorn
+  tasks:
+  - name: Partition the disk into a single large partition filling the disk
+    become: yes
+    parted:
+      device: "{{ device }}"
+      number: 1
+      state: present
+      part_start: "0%"
+      part_end: "100%"
+      unit: GB
+
+  - name: Create filesystem on new partition
+    become: yes
+    filesystem:
+      fstype: xfs
+      dev: "{{ partition }}"
+
+  - name: Mount drive on {{ mount_point }}
+    become: yes
+    mount:
+      src: "{{ partition }}"
+      path: "{{ mount_point }}"
+      fstype: xfs
+      state: mounted
+      boot: yes
+      backup: yes
+
+- name: Prepare agents for Longhorn
+  hosts: master, node
+  tags: longhorn
+  tasks:
+  - name: Install necessary packages required by Longhorn
+    become: yes
+    apt:
+      pkg:
+      - jq
+      - open-iscsi
+      state: present
+
+  - name: Start the systemd service for iscsid if it is not started
+    become: yes
+    systemd:
+      name: iscsid
+      enabled: yes
+      state: started
+
+- name: Verify prerequisites for Longhorn and label storage nodes
+  hosts: master[0]
+  tags: longhorn
+  tasks:
+  - name: Run the preconfig script
+    become: yes
+    shell: curl -sSfL https://raw.githubusercontent.com/longhorn/longhorn/v1.2.4/scripts/environment_check.sh | bash
+    register: check
+
+  - name: Print output from check
+    debug: msg="{{ check.stdout }}"
+
+  # Label the nodes to ensure Longhorn volumes are only placed on disks of the storage nodes:
+  # https://longhorn.io/kb/tip-only-use-storage-on-a-set-of-nodes/#tell-longhorn-to-create-a-default-disk-on-a-specific-set-of-nodes
+  - name: Apply label "node.longhorn.io/create-default-disk=true" on storage nodes in Kubernetes
+    become: yes
+    command: kubectl label nodes --overwrite {{ hostvars[item].node_name }} node.longhorn.io/create-default-disk=true
+    loop: "{{ hostvars[inventory_hostname]['groups']['storage_servers'] }}"
