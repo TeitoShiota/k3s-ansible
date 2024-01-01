@@ -1,0 +1,38 @@
+# Description of values are explained here:
+# https://github.com/longhorn/charts/blob/longhorn-1.2.4/charts/longhorn/questions.yml
+
+# This is because I want to expose the
+# UI of Longhorn outside the cluster
+# with an IP address. Optional.
+service:
+  ui:
+    type: LoadBalancer
+
+persistence:
+  # Is by default 3, since there are
+  # only 2 nodes in the cluster dedicated to
+  # storage this must be set to 2.
+  defaultClassReplicaCount: 3
+
+# Only important if you run Prometheus
+# and want to scrape metrics from Longhorn
+# and display it with something like Grafana
+# in a dashboard.
+annotations:
+  # prometheus.io/scrape: "true"
+  influxdb2.com/scrape: "true"
+
+defaultSettings:
+  # Mountpoint of the filesystem on the two Raspberry Pis
+  # dedicated to storage.
+  defaultDataPath: /mnt/data
+  taintToleration: node-role.kubernetes.io/master:NoSchedule
+  # Ensure that only specifically labeled nodes are used for storing
+  # longhorn volumes: https://longhorn.io/kb/tip-only-use-storage-on-a-set-of-nodes/#tell-longhorn-to-create-a-default-disk-on-a-specific-set-of-nodes
+  createDefaultDiskLabeledNodes: true
+  storageMinimalAvailablePercentage: 10
+  # Ensure that volumes created from the UI
+  # of Longhorn has 2 replicas set by default
+  # for the same reasons persistence.defaultClassReplicaCount
+  # is set to 2 instead of 3 replicas.
+  defaultReplicaCount: 3

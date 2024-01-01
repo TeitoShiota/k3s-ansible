@@ -1,5 +1,17 @@
+- name: Install Parted if it is not installed
+  hosts: k3s_cluster
+  tags: longhorn
+  tasks:
+  - name: Install parted
+    become: yes
+    apt:
+      pkg:
+      - parted
+      update_cache: yes
+      state: latest
+
 - name: Format disks for storage before installing Longhorn
-  hosts: storage_servers
+  hosts: node
   tags: longhorn
   tasks:
   - name: Partition the disk into a single large partition filling the disk
@@ -15,7 +27,7 @@
   - name: Create filesystem on new partition
     become: yes
     filesystem:
-      fstype: xfs
+      fstype: ext4
       dev: "{{ partition }}"
 
   - name: Mount drive on {{ mount_point }}
@@ -23,13 +35,13 @@
     mount:
       src: "{{ partition }}"
       path: "{{ mount_point }}"
-      fstype: xfs
+      fstype: ext4
       state: mounted
       boot: yes
       backup: yes
 
 - name: Prepare agents for Longhorn
-  hosts: master, node
+  hosts: k3s_cluster
   tags: longhorn
   tasks:
   - name: Install necessary packages required by Longhorn
@@ -48,7 +60,7 @@
       state: started
 
 - name: Verify prerequisites for Longhorn and label storage nodes
-  hosts: master[0]
+  hosts: k3s_cluster
   tags: longhorn
   tasks:
   - name: Run the preconfig script

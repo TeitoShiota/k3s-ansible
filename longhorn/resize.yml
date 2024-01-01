@@ -1,0 +1,12 @@
+- name: Format disks for storage before installing Longhorn
+  hosts: node
+  tags: longhorn
+  tasks:
+  - name: Partition the disk into a single large partition filling the disk
+    become: yes
+    parted:
+      device: "{{ device }}"
+      number: 1
+      part_end: "100%"
+      resize: true
+      state: present

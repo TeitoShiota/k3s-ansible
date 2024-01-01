@@ -1,0 +1,8 @@
+- name: install Longhorn
+  hosts: master[0]
+  helm_installer:
+    name: Longhorn
+    chart_ref: longhorn/longhorn
+    release_namespace: longhorn-system
+    release_name: longhorn
+    values: date/
